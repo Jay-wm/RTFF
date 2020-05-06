@@ -1,4 +1,4 @@
-import datetime
+import time
 import lxml.html
 import csv
 from selenium import webdriver
@@ -29,32 +29,51 @@ def get_url(foundList_page_source, num):
     found_url = selector.xpath(address)[0]
     return found_url
 
+# 筛选基金
 def filter_found(found_url):
     found_page_source = get_page_sources(found_url, '//*[@class="wrapper_min"]')
     selector = lxml.html.fromstring(found_page_source)
-    found_name = selector.xpath('//*[@id="body"]/div[12]/div/div/div[1]/div[1]/div/text()')[0]
-    found_ticker = selector.xpath('//*[@id="body"]/div[12]/div/div/div[1]/div[1]/div/span[2]/text()')[0]
 
-    '''通过成立日期进行第一次筛选'''
+    '''获得基金成立日期'''
     found_date_establishment0 = selector.xpath('//*[@id="body"]/div[12]/div/div/div[3]/div[1]/div[2]/table/tbody/tr[2]/td[1]/text()')[0]
     found_date_establishment = found_date_establishment0.replace('：', '')
-    zero = datetime.datetime.fromtimestamp(0)
 
-    try:
-        d1 = datetime.datetime.strptime(found_date_establishment, fmt)
-    except:
-        d1 = zero
+    '''通过成立日期进行第一次筛选'''
+    '''将获得的日期转换为以秒作单位'''
+    found_date_establishment_sec = time.mktime(time.strptime(found_date_establishment, "%Y-%m-%d"))
+    date = time.mktime(time.strptime('2013-1-1', "%Y-%m-%d"))
 
-    try:
-        d2 = datetime.datetime.strptime(str(2013-01-01), fmt)
-    except:
-        d2 = zero
+    # 满足成立年限大于7年，则获取基金规模进行判断
+    if found_date_establishment_sec < date:
+        found_scale0 = selector.xpath('//*[@id="body"]/div[12]/div/div/div[3]/div[1]/div[2]/table/tbody/tr[1]/td[2]/text()')[0]
+        found_scale1 = found_scale0.replace('：', '')
+        found_scale1_list = list(found_scale1)
+        found_scale_list = []
+        for i in range(len(found_scale1_list) - 14):
+            found_scale_list.append(found_scale1_list[i])
 
-    if d1 >
+        found_scale = float(''.join(found_scale_list))
+        if 5.00 < found_scale < 50.00:
+            found_name = selector.xpath('//*[@id="body"]/div[12]/div/div/div[1]/div[1]/div/text()')[0]
+            found_ticker = selector.xpath('//*[@id="body"]/div[12]/div/div/div[1]/div[1]/div/span/[@class="ui-num"]/text()')[0]
+            found_dict =  {'基金代码': found_ticker, '基金名称': found_name, '成立日期': found_date_establishment,
+                '基金规模(亿元)': found_scale}
+            return found_dict
+        else:
+            print(format('基金规模' +found_scale0 + '不满足5-50亿要求' ))
+            return 0
+    else:
+        print(format('基金成立日期：' + found_date_establishment + '，成立年限小于7年'))
+        return 0
 
-    found_date_establishment
-
-    return found_name, found_ticker
+def save_data(data):
+    '''将基金信息写入Excel'''
+    titles = ['基金代码', '基金名称', '成立日期', '基金规模(亿元)']
+    file_name = '债券基金筛选.csv'
+    with open(file_name, 'w', newline='', encoding='utf-8') as f:
+        writer = csv.DictWriter(f, fieldnames=titles)
+        writer.writeheader()
+        writer.writerows(data)
 
 '''债券基金排行榜网址'''
 url = 'http://fund.eastmoney.com/daogou/#dt0;ftzq;rs;sd2015-06-01;ed2016-02-29;pr;cp;rt;tp;rk;se;nx71;scdiy;stdesc;pi1;pn20;zfdiy;shlist'
@@ -63,42 +82,16 @@ url = 'http://fund.eastmoney.com/daogou/#dt0;ftzq;rs;sd2015-06-01;ed2016-02-29;p
 foundList_page_source = get_page_sources(url, '//*[@id="fund_list"]')
 
 '''筛选出5个满足：基金规模-尽量选择规模大的，最好在5-50亿之间，规模太小容易有波动；成立年限-7年以上的债券基金'''
-for num in range(1):
-    Found_url = get_url(FoundList_page_source, num)
-    filter_found(Found_url)
-
-
-
-
-
-# get_url(Found_page_source, 2)
-
-    # for each in Found_body_list:
-    #     Found_url.append(each.xpath('td[3]/a/@href')[0])
-    #     Found_ticker.append(each.xpath('td[3]/a/text()')[0])
-    #     Found_name.append(each.xpath('td[4]/a/text()')[0])
-    #     Found_return_date.append(each.xpath('td[5]/text()')[0])
-    #     Found_return.append(each.xpath('td[6]/text()')[0])
-    #     Found_rate_return.append(each.xpath('td[17]/text()')[0])
-
-# def get_more_info(Found_url):
-#     for
-#
-#
-# def save_data(Found_ticker, Found_name, ):
-#     for i in range(len(Found_name)):
-#         dict = {'基金代码': Found_ticker[i], '基金名称': Found_name[i], '日期': Found_return_date[i],
-#                 '万份收益': Found_return[i], '近5年回报率': Found_rate_return[i]}
-#         data.append(dict)
-#
-#     '''将基金信息写入Excel'''
-#     titles = ['基金代码', '基金名称', '日期', '万份收益', '近5年回报率']
-#     file_name = '货币基金筛选.csv'
-#     with open(file_name, 'w', newline='', encoding='utf-8') as f:
-#         writer = csv.DictWriter(f, fieldnames=titles)
-#         writer.writeheader()
-#         writer.writerows(data)
-#
-#
-#
-# get_found()
+num = 0
+i = 0
+data = []
+while i < 5:
+    found_url = get_url(foundList_page_source, num)
+    if filter_found(found_url):
+        found_dict = filter_found(found_url)
+        data.append(found_dict)
+        i += 1
+        num += 1
+    else:
+        num += 1
+save_data(data)

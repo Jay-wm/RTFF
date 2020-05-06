@@ -55,7 +55,7 @@ def filter_found(found_url):
         found_scale = float(''.join(found_scale_list))
         if 5.00 < found_scale < 50.00:
             found_name = selector.xpath('//*[@id="body"]/div[12]/div/div/div[1]/div[1]/div/text()')[0]
-            found_ticker = selector.xpath('//*[@id="body"]/div[12]/div/div/div[1]/div[1]/div/span/[@class="ui-num"]/text()')[0]
+            found_ticker = selector.xpath('//*[@class="ui-num"]/text()')[0]
             found_dict =  {'基金代码': found_ticker, '基金名称': found_name, '成立日期': found_date_establishment,
                 '基金规模(亿元)': found_scale}
             return found_dict
@@ -78,20 +78,23 @@ def save_data(data):
 '''债券基金排行榜网址'''
 url = 'http://fund.eastmoney.com/daogou/#dt0;ftzq;rs;sd2015-06-01;ed2016-02-29;pr;cp;rt;tp;rk;se;nx71;scdiy;stdesc;pi1;pn20;zfdiy;shlist'
 
+num = 0
+i = 0
+data = []
 '''获得债券基金排行榜页面源代码'''
 foundList_page_source = get_page_sources(url, '//*[@id="fund_list"]')
 
 '''筛选出5个满足：基金规模-尽量选择规模大的，最好在5-50亿之间，规模太小容易有波动；成立年限-7年以上的债券基金'''
-num = 0
-i = 0
-data = []
+
 while i < 5:
     found_url = get_url(foundList_page_source, num)
     if filter_found(found_url):
         found_dict = filter_found(found_url)
         data.append(found_dict)
         i += 1
+        print(i)
         num += 1
     else:
         num += 1
+
 save_data(data)

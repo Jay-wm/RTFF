@@ -38,13 +38,14 @@ def filter_found(found_url):
     found_date_establishment0 = selector.xpath('//*[@id="body"]/div[12]/div/div/div[3]/div[1]/div[2]/table/tbody/tr[2]/td[1]/text()')[0]
     found_date_establishment = found_date_establishment0.replace('：', '')
 
-    '''通过成立日期进行第一次筛选'''
+    
     '''将获得的日期转换为以秒作单位'''
     found_date_establishment_sec = time.mktime(time.strptime(found_date_establishment, "%Y-%m-%d"))
     date = time.mktime(time.strptime('2013-1-1', "%Y-%m-%d"))
 
-    # 满足成立年限大于7年，则获取基金规模进行判断
+    '''通过成立日期进行第一次筛选，满足成立年限大于7年，则获取基金规模进行判断'''
     if found_date_establishment_sec < date:
+        '''获取基金规模，并去掉单位等干扰信息得到具体数值（亿元）'''
         found_scale0 = selector.xpath('//*[@id="body"]/div[12]/div/div/div[3]/div[1]/div[2]/table/tbody/tr[1]/td[2]/text()')[0]
         found_scale1 = found_scale0.replace('：', '')
         found_scale1_list = list(found_scale1)
@@ -53,6 +54,7 @@ def filter_found(found_url):
             found_scale_list.append(found_scale1_list[i])
 
         found_scale = float(''.join(found_scale_list))
+        '''通过比较基金规模是否在5-50亿元之间进行二次筛选基金'''
         if 5.00 < found_scale < 50.00:
             found_name = selector.xpath('//*[@id="body"]/div[12]/div/div/div[1]/div[1]/div/text()')[0]
             found_ticker = selector.xpath('//*[@class="ui-num"]/text()')[0]
@@ -66,6 +68,7 @@ def filter_found(found_url):
         print(format('基金成立日期：' + found_date_establishment + '，成立年限小于7年'))
         return 0
 
+# 将获取的基金资料以字典形式存入CSV格式文件中
 def save_data(data):
     '''将基金信息写入Excel'''
     titles = ['基金代码', '基金名称', '成立日期', '基金规模(亿元)']
@@ -75,17 +78,18 @@ def save_data(data):
         writer.writeheader()
         writer.writerows(data)
 
-'''债券基金排行榜网址'''
+# 债券基金排行榜网址
 url = 'http://fund.eastmoney.com/daogou/#dt0;ftzq;rs;sd2015-06-01;ed2016-02-29;pr;cp;rt;tp;rk;se;nx71;scdiy;stdesc;pi1;pn20;zfdiy;shlist'
 
+# 初始化变量与基金字典数组
 num = 0
 i = 0
 data = []
-'''获得债券基金排行榜页面源代码'''
+
+# 获得债券基金排行榜页面源代码
 foundList_page_source = get_page_sources(url, '//*[@id="fund_list"]')
 
-'''筛选出5个满足：基金规模-尽量选择规模大的，最好在5-50亿之间，规模太小容易有波动；成立年限-7年以上的债券基金'''
-
+# 筛选出5个满足：基金规模-尽量选择规模大的，最好在5-50亿之间，规模太小容易有波动；成立年限-7年以上的债券基金
 while i < 5:
     found_url = get_url(foundList_page_source, num)
     if filter_found(found_url):
@@ -97,4 +101,5 @@ while i < 5:
     else:
         num += 1
 
+# 将获取的满足条件的5个基金数据进行保存     
 save_data(data)

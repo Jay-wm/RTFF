@@ -27,6 +27,8 @@ def get_url(selector, num):
 
 def save_date(data):
     '''将基金信息写入Excel'''
+
+    # 靠
     titles = ['基金代码', '基金名称', '成立日期', '基金规模(亿元)']
     file_name = '债券基金筛选test.csv'
     with open(file_name, 'w', newline='', encoding='utf-8') as f:

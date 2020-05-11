@@ -1,10 +1,9 @@
 class Found():
     '''表示基金的类'''
 
-    def __init__(self, selector1, selector2):
+    def __init__(self, selector1):
         '''初始化属性page_source'''
         self.selector1 = selector1
-        self.selector2 = selector2
 
     def get_name(self):
         '''获取基金名称'''
@@ -39,17 +38,3 @@ class Found():
         found_scale = float(''.join(found_scale_list))
         return found_scale
 
-    def get_manager_name(self):
-        '''获取当前基金经理名称'''
-        manager_name = self.selector2.xpath('//tbody/tr[1]/td[3]/a/text()')[0]
-        return manager_name
-
-    def get_manage_time(self):
-        '''获得基金经理任职时长'''
-        manage_time = self.selector2.xpath('//tbody/tr[1]/td[4]/text()')[0]
-        return manage_time
-
-    def get_manage_reward(self):
-        '''获得基金经理任职回报'''
-        manage_reward = self.selector2.xpath('//tbody/tr[1]/td[5]/text()')[0]
-        return manage_reward

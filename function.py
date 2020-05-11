@@ -6,6 +6,7 @@ from selenium.webdriver.support import expected_conditions as EC
 
 def get_page_sources(url, condition):
     '''初始化driver'''
+    '''url：目标网址，condition：目标条件'''
     driver = webdriver.Chrome('./chromedriver')
     driver.get(url)
     try:
@@ -19,10 +20,11 @@ def get_page_sources(url, condition):
     return selector
 
 
-def get_url(selector, num):
+def get_url(selector):
     '''获取排行榜第num个基金页面的网址'''
-    address = '//*[@id="fund_list"]/tbody/tr[' + str(num+1) + ']/td[2]/a/@href'
-    found_url = selector.xpath(address)[0]
+    # address = '//*[@id="fund_list"]/tbody/tr[' + str(num+1) + ']/td[2]/a/@href'
+    # found_url = selector.xpath(address)[0]
+    found_url = selector.xpath('//tbody/tr/td[2]/a/@href')
     return found_url
 
 def save_date(data):

@@ -1,5 +1,6 @@
 '''债券基金筛选'''
 from found import Found
+from manager import Manager
 import function
 
 def start():
@@ -19,7 +20,9 @@ def start():
     # 通过基金规模进行再次筛选
     for i in range(20):
         selector2 = function.get_page_sources(found_url_list[i], '//tbody/tr/td[3]/[@href]')
+        found_class = Found(selector2)
         found_scale = found_class.get_scale()
+        found_
 
         # 首先得到基金规模
 
